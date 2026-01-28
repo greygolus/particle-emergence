@@ -137,9 +137,11 @@ function renderSidebar(state: GameState): void {
   if (!container) return;
 
   // Recreate sidebar if structure changed (tabs unlocked)
+  const periodicTabExists = container.querySelector('[data-tab="periodic-table"]') !== null;
+  const forcesTabExists = container.querySelector('[data-tab="forces"]') !== null;
   const needsRecreate = !sidebarCreated || state.currentEmergentLevel !== lastEmergentLevel ||
-    state.periodicTableUnlocked !== container.querySelector('[data-tab="periodic-table"]')?.parentElement !== null ||
-    state.forcesUnlocked !== container.querySelector('[data-tab="forces"]')?.parentElement !== null;
+    state.periodicTableUnlocked !== periodicTabExists ||
+    state.forcesUnlocked !== forcesTabExists;
 
   if (needsRecreate) {
     createSidebar(container, state);

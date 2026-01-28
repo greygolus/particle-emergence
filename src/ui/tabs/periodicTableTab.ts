@@ -397,7 +397,7 @@ function updateFusionPanel(container: HTMLElement, state: GameState): void {
     // Update button
     setDisabled(container, 'fusion-btn', !check.canStart);
     const data = getElementByZ(nextUnlockable.z);
-    setText(container, 'fusion-btn-text', check.canStart ? `Fuse ${data?.symbol}` : check.reason);
+    setText(container, 'fusion-btn-text', check.canStart ? `Fuse ${data?.symbol}` : check.reason ?? '');
   }
 }
 
@@ -434,7 +434,7 @@ function updateDecayPanel(container: HTMLElement, state: GameState): void {
       const sourceZ = target.z > 82 ? target.z - 1 : 82;
       const check = canStartDecay(state, sourceZ, target.z);
       setDisabled(container, `decay-btn-${target.z}`, !check.canStart);
-      setText(container, `decay-text-${target.z}`, check.canStart ? 'Decay' : check.reason);
+      setText(container, `decay-text-${target.z}`, check.canStart ? 'Decay' : check.reason ?? '');
     }
 
     // Bosons

@@ -161,7 +161,7 @@ function updateForcesTab(container: HTMLElement, state: GameState): void {
 
   // Run button
   setDisabled(container, 'run-boson-btn', !canRun.canRun);
-  setText(container, 'run-boson-text', canRun.canRun ? 'Run Boson Collider' : canRun.reason);
+  setText(container, 'run-boson-text', canRun.canRun ? 'Run Boson Collider' : canRun.reason ?? '');
 
   // Unlock section
   if (!state.colliderUpgrades.bosonModeUnlocked) {

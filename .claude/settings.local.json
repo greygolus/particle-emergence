@@ -4,7 +4,10 @@
       "Bash(timeout 8 npm run dev)",
       "Bash(dir /s \"c:\\\\Users\\\\greyg\\\\Desktop\\\\ParticalGame\")",
       "Bash(dir:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

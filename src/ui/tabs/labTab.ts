@@ -468,7 +468,7 @@ function updateCollider(container: HTMLElement, state: GameState): void {
 
   // Run button
   setDisabled(container, 'run-collider-btn', !canRun.canRun);
-  setText(container, 'run-collider-text', canRun.canRun ? (isBosonMode ? 'Run Boson Collider' : 'Run Collider') : canRun.reason);
+  setText(container, 'run-collider-text', canRun.canRun ? (isBosonMode ? 'Run Boson Collider' : 'Run Collider') : canRun.reason ?? '');
 
   // Debris
   const hasDebris = state.debris > 0;
