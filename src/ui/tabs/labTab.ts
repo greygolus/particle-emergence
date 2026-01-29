@@ -18,9 +18,10 @@ import {
 } from '../../systems/upgrades';
 import {
   canRunCollider, canRunBosonCollider,
-  canUnlockTier3, getTier2ParticleCount
+  canUnlockTier3, getTier2ParticleCount, getMaxPrecision
 } from '../../systems/collider';
 import { getAnnihilatableCount, AnnihilationPair } from '../../systems/annihilation';
+import { getDebrisUpgradeCost, canBuyDebrisUpgrade, DebrisUpgradeType } from '../../systems/debris';
 import {
   setText, setDisabled, setActive, setChecked, setInputValue, setVisible, setClass
 } from '../uiUpdater';
@@ -113,7 +114,7 @@ function createQuarkHarvester(state: GameState): string {
 
   return `
     <section class="card">
-      <h2>Quark Harvester</h2>
+      <h2>Quark Harvester <span class="info-btn" data-tooltip-info="quarkHarvester">i</span></h2>
       <div class="harvester-stats">
         <div class="stat">
           <span class="label">u rate:</span>
@@ -202,7 +203,7 @@ function createLeptonHarvester(state: GameState): string {
 
   return `
     <section class="card">
-      <h2>Lepton Harvester</h2>
+      <h2>Lepton Harvester <span class="info-btn" data-tooltip-info="leptonHarvester">i</span></h2>
       <div class="harvester-stats">
         <div class="stat">
           <span class="label">e- rate:</span>
@@ -292,7 +293,7 @@ function createCollider(state: GameState): string {
 
   return `
     <section class="card">
-      <h2>Particle Collider <span data-bind="overdrive-indicator"></span></h2>
+      <h2>Particle Collider <span class="info-btn" data-tooltip-info="collider">i</span> <span data-bind="overdrive-indicator"></span></h2>
 
       <div class="collider-controls">
         <div class="tier-select">
@@ -349,7 +350,7 @@ function createCollider(state: GameState): string {
           <span class="value" data-bind="upgrade-chance"></span>
         </div>
         <div class="stat" data-bind="pity-container">
-          <span class="label">Pity:</span>
+          <span class="label">Pity: <span class="info-btn" data-tooltip-info="pity">i</span></span>
           <span class="value" data-bind="pity-value"></span>
         </div>
         <div class="stat" data-bind="boson-chance-container" style="display: none;">
@@ -362,12 +363,28 @@ function createCollider(state: GameState): string {
         <span data-bind="run-collider-text">Run Collider</span>
       </button>
 
-      <div class="debris-exchange" data-bind="debris-container" style="display: none;">
-        <span class="label">Debris: <span data-bind="debris-count"></span></span>
-        <button class="btn btn-small" data-action="debris-to-pq">→ Pq</button>
-        <button class="btn btn-small" data-action="debris-to-pl">→ Pl</button>
-        <button class="btn btn-small" data-action="debris-to-energy">→ E</button>
-        <button class="btn btn-small" data-action="debris-to-pity">→ Pity</button>
+      <div class="debris-shop" data-bind="debris-container" style="display: none;">
+        <div class="debris-header">
+          <span class="label">Debris: <span data-bind="debris-count"></span></span>
+        </div>
+        <div class="debris-upgrades">
+          <button class="btn btn-upgrade" data-action="debris-upgrade" data-upgrade="energyAmplifier" data-bind="debris-upgrade-energyAmplifier">
+            <span class="upgrade-name">Energy Amplifier</span>
+            <span class="upgrade-cost" data-bind="debris-cost-energyAmplifier"></span>
+          </button>
+          <button class="btn btn-upgrade" data-action="debris-upgrade" data-upgrade="debrisSynergy" data-bind="debris-upgrade-debrisSynergy">
+            <span class="upgrade-name">Debris Synergy</span>
+            <span class="upgrade-cost" data-bind="debris-cost-debrisSynergy"></span>
+          </button>
+          <button class="btn btn-upgrade" data-action="debris-upgrade" data-upgrade="leptonBoost" data-bind="debris-upgrade-leptonBoost">
+            <span class="upgrade-name">Lepton Boost</span>
+            <span class="upgrade-cost" data-bind="debris-cost-leptonBoost"></span>
+          </button>
+          <button class="btn btn-upgrade" data-action="debris-upgrade" data-upgrade="precisionMastery" data-bind="debris-upgrade-precisionMastery">
+            <span class="upgrade-name">Precision Mastery</span>
+            <span class="upgrade-cost" data-bind="debris-cost-precisionMastery"></span>
+          </button>
+        </div>
       </div>
     </section>
   `;
@@ -382,7 +399,7 @@ function updateCollider(container: HTMLElement, state: GameState): void {
   const isBosonMode = state.collider.isBosonMode && state.colliderUpgrades.bosonModeUnlocked;
 
   const cfg = tier === 2 ? BALANCE.colliderT2 : BALANCE.colliderT3;
-  const maxPrec = tier === 2 ? BALANCE.colliderT2.maxPrecisionSpend : BALANCE.colliderT3.maxPrecisionSpend;
+  const maxPrec = getMaxPrecision(state, tier);
 
   let baseChance = cfg.baseUpgradeChance;
   baseChance += precSpend * cfg.precisionBonusPerPl;
@@ -475,6 +492,16 @@ function updateCollider(container: HTMLElement, state: GameState): void {
   setVisible(container, 'debris-container', hasDebris);
   if (hasDebris) {
     setText(container, 'debris-count', formatNumber(state.debris));
+
+    // Update debris shop buttons
+    const upgrades: DebrisUpgradeType[] = ['energyAmplifier', 'debrisSynergy', 'leptonBoost', 'precisionMastery'];
+    for (const upgrade of upgrades) {
+      const cost = getDebrisUpgradeCost(state, upgrade);
+      const canAfford = canBuyDebrisUpgrade(state, upgrade);
+      const level = state.debrisUpgrades[upgrade];
+      setText(container, `debris-cost-${upgrade}`, `Lv${level} → ${cost}`);
+      setDisabled(container, `debris-upgrade-${upgrade}`, !canAfford);
+    }
   }
 }
 
@@ -490,7 +517,7 @@ function setAttr(container: HTMLElement, bindKey: string, attr: string, value: s
 function createAntimatter(state: GameState): string {
   return `
     <section class="card">
-      <h2>Annihilation Chamber</h2>
+      <h2>Annihilation Chamber <span class="info-btn" data-tooltip-info="annihilation">i</span></h2>
       <p class="hint">Convert matter + antimatter pairs to Energy and photons</p>
 
       <div class="annihilation-grid" data-bind="annihilation-grid">
@@ -521,9 +548,7 @@ function createAnnihilationPairs(state: GameState): string {
     <div class="annihilation-pair">
       <span class="pair-name">${p.name}</span>
       <span class="pair-count" data-bind="pair-${p.id}-count">0 pairs</span>
-      <button class="btn btn-small" data-bind="pair-${p.id}-x1" data-action="annihilate" data-pair="${p.id}" data-count="1">x1</button>
-      <button class="btn btn-small" data-bind="pair-${p.id}-x10" data-action="annihilate" data-pair="${p.id}" data-count="10">x10</button>
-      <button class="btn btn-small" data-bind="pair-${p.id}-max" data-action="annihilate" data-pair="${p.id}" data-count="max">Max</button>
+      <button class="btn btn-small" data-bind="pair-${p.id}-btn" data-action="annihilate" data-pair="${p.id}">Annihilate</button>
     </div>
   `).join('');
 }
@@ -559,9 +584,7 @@ function updateAntimatter(container: HTMLElement, state: GameState): void {
   for (const p of pairs) {
     const available = getAnnihilatableCount(state, p.id);
     setText(container, `pair-${p.id}-count`, `${available} pairs`);
-    setDisabled(container, `pair-${p.id}-x1`, available <= 0);
-    setDisabled(container, `pair-${p.id}-x10`, available < 10);
-    setDisabled(container, `pair-${p.id}-max`, available <= 0);
+    setDisabled(container, `pair-${p.id}-btn`, available <= 0);
   }
 }
 
@@ -575,56 +598,56 @@ function createInventory(state: GameState): string {
       <div class="inventory-section">
         <h3>Matter</h3>
         <div class="inventory-grid">
-          <div class="particle">
+          <div class="particle" data-tooltip-particle="u">
             <span class="name">u</span>
             <span class="count" data-bind="matter-u"></span>
           </div>
-          <div class="particle">
+          <div class="particle" data-tooltip-particle="d">
             <span class="name">d</span>
             <span class="count" data-bind="matter-d"></span>
           </div>
           ${state.currentEmergentLevel >= 1 ? `
-            <div class="particle">
+            <div class="particle" data-tooltip-particle="e-">
               <span class="name">e-</span>
               <span class="count" data-bind="matter-e"></span>
             </div>
-            <div class="particle">
+            <div class="particle" data-tooltip-particle="ve">
               <span class="name">νe</span>
               <span class="count" data-bind="matter-ve"></span>
             </div>
           ` : ''}
           ${state.currentEmergentLevel >= 2 ? `
-            <div class="particle tier2">
+            <div class="particle tier2" data-tooltip-particle="s">
               <span class="name">s</span>
               <span class="count" data-bind="matter-s"></span>
             </div>
-            <div class="particle tier2">
+            <div class="particle tier2" data-tooltip-particle="c">
               <span class="name">c</span>
               <span class="count" data-bind="matter-c"></span>
             </div>
-            <div class="particle tier2">
+            <div class="particle tier2" data-tooltip-particle="μ-">
               <span class="name">μ-</span>
               <span class="count" data-bind="matter-mu"></span>
             </div>
-            <div class="particle tier2">
+            <div class="particle tier2" data-tooltip-particle="vμ">
               <span class="name">νμ</span>
               <span class="count" data-bind="matter-vmu"></span>
             </div>
           ` : ''}
           ${state.currentEmergentLevel >= 3 ? `
-            <div class="particle tier3">
+            <div class="particle tier3" data-tooltip-particle="b">
               <span class="name">b</span>
               <span class="count" data-bind="matter-b"></span>
             </div>
-            <div class="particle tier3">
+            <div class="particle tier3" data-tooltip-particle="t">
               <span class="name">t</span>
               <span class="count" data-bind="matter-t"></span>
             </div>
-            <div class="particle tier3">
+            <div class="particle tier3" data-tooltip-particle="τ-">
               <span class="name">τ-</span>
               <span class="count" data-bind="matter-tau"></span>
             </div>
-            <div class="particle tier3">
+            <div class="particle tier3" data-tooltip-particle="vτ">
               <span class="name">ντ</span>
               <span class="count" data-bind="matter-vtau"></span>
             </div>
@@ -636,14 +659,14 @@ function createInventory(state: GameState): string {
         <div class="inventory-section">
           <h3>Antimatter</h3>
           <div class="inventory-grid antimatter">
-            <div class="particle"><span class="name">ū</span><span class="count" data-bind="anti-u"></span></div>
-            <div class="particle"><span class="name">d̄</span><span class="count" data-bind="anti-d"></span></div>
-            <div class="particle"><span class="name">e+</span><span class="count" data-bind="anti-e"></span></div>
-            <div class="particle"><span class="name">ν̄e</span><span class="count" data-bind="anti-ve"></span></div>
-            <div class="particle tier2" data-bind="anti-s-container" style="display: none;"><span class="name">s̄</span><span class="count" data-bind="anti-s"></span></div>
-            <div class="particle tier2" data-bind="anti-c-container" style="display: none;"><span class="name">c̄</span><span class="count" data-bind="anti-c"></span></div>
-            <div class="particle tier2" data-bind="anti-mu-container" style="display: none;"><span class="name">μ+</span><span class="count" data-bind="anti-mu"></span></div>
-            <div class="particle tier2" data-bind="anti-vmu-container" style="display: none;"><span class="name">ν̄μ</span><span class="count" data-bind="anti-vmu"></span></div>
+            <div class="particle" data-tooltip-particle="ū"><span class="name">ū</span><span class="count" data-bind="anti-u"></span></div>
+            <div class="particle" data-tooltip-particle="d̄"><span class="name">d̄</span><span class="count" data-bind="anti-d"></span></div>
+            <div class="particle" data-tooltip-particle="e+"><span class="name">e+</span><span class="count" data-bind="anti-e"></span></div>
+            <div class="particle" data-tooltip-particle="v̄e"><span class="name">ν̄e</span><span class="count" data-bind="anti-ve"></span></div>
+            <div class="particle tier2" data-tooltip-particle="s̄" data-bind="anti-s-container" style="display: none;"><span class="name">s̄</span><span class="count" data-bind="anti-s"></span></div>
+            <div class="particle tier2" data-tooltip-particle="c̄" data-bind="anti-c-container" style="display: none;"><span class="name">c̄</span><span class="count" data-bind="anti-c"></span></div>
+            <div class="particle tier2" data-tooltip-particle="μ+" data-bind="anti-mu-container" style="display: none;"><span class="name">μ+</span><span class="count" data-bind="anti-mu"></span></div>
+            <div class="particle tier2" data-tooltip-particle="v̄μ" data-bind="anti-vmu-container" style="display: none;"><span class="name">ν̄μ</span><span class="count" data-bind="anti-vmu"></span></div>
           </div>
         </div>
       ` : ''}
@@ -651,11 +674,11 @@ function createInventory(state: GameState): string {
       <div class="inventory-section">
         <h3>Catalysts</h3>
         <div class="inventory-grid catalysts">
-          <div class="particle">
+          <div class="particle" data-tooltip-particle="photon">
             <span class="name">γ</span>
             <span class="count" data-bind="catalyst-photon"></span>
           </div>
-          <div class="particle">
+          <div class="particle" data-tooltip-particle="gluon">
             <span class="name">g</span>
             <span class="count" data-bind="catalyst-gluon"></span>
           </div>
@@ -666,11 +689,11 @@ function createInventory(state: GameState): string {
         <div class="inventory-section">
           <h3>Composites</h3>
           <div class="inventory-grid composites">
-            <div class="particle">
+            <div class="particle" data-tooltip-particle="proton">
               <span class="name">p</span>
               <span class="count" data-bind="composite-proton"></span>
             </div>
-            <div class="particle">
+            <div class="particle" data-tooltip-particle="neutron">
               <span class="name">n</span>
               <span class="count" data-bind="composite-neutron"></span>
             </div>
@@ -694,10 +717,10 @@ function createInventory(state: GameState): string {
         <div class="inventory-section">
           <h3>Bosons</h3>
           <div class="inventory-grid bosons">
-            <div class="particle"><span class="name">W+</span><span class="count" data-bind="boson-wp"></span></div>
-            <div class="particle"><span class="name">W-</span><span class="count" data-bind="boson-wm"></span></div>
-            <div class="particle"><span class="name">Z0</span><span class="count" data-bind="boson-z0"></span></div>
-            <div class="particle"><span class="name">H</span><span class="count" data-bind="boson-h"></span></div>
+            <div class="particle" data-tooltip-particle="W+"><span class="name">W+</span><span class="count" data-bind="boson-wp"></span></div>
+            <div class="particle" data-tooltip-particle="W-"><span class="name">W-</span><span class="count" data-bind="boson-wm"></span></div>
+            <div class="particle" data-tooltip-particle="Z0"><span class="name">Z0</span><span class="count" data-bind="boson-z0"></span></div>
+            <div class="particle" data-tooltip-particle="higgs"><span class="name">H</span><span class="count" data-bind="boson-h"></span></div>
           </div>
         </div>
       ` : ''}

@@ -278,12 +278,65 @@ export const BALANCE = {
     jackpotGluons: { min: 3, max: 6 },
   },
 
-  // ===== DEBRIS EXCHANGE RATES =====
-  debris: {
-    pqExchangeRate: 0.1, // 10 debris = 1 Pq
-    plExchangeRate: 0.05, // 20 debris = 1 Pl
-    energyExchangeRate: 0.02, // 50 debris = 1 E
-    pityContribution: 0.1, // 10 debris = 1 pity
+  // ===== DEBRIS SHOP =====
+  debrisShop: {
+    // Upgrade 1: Energy Amplifier - boosts exponential scaling of Pl->Energy on T2 fail
+    energyAmplifier: {
+      baseCost: 25,
+      costScale: 2,
+      effectPerLevel: 0.1,  // +0.1 to the exponent base per level
+    },
+    // Upgrade 2: Debris Synergy - +X% Pq/s based on debris held
+    debrisSynergy: {
+      baseCost: 50,
+      costScale: 2.5,
+      effectPerLevel: 0.01,  // +1% Pq/s per debris per level
+    },
+    // Upgrade 3: Lepton Boost - +5% lepton rate AND Pl factor per level
+    leptonBoost: {
+      baseCost: 100,
+      costScale: 3,
+      effectPerLevel: 0.05,  // +5% each per level
+    },
+    // Upgrade 4: Precision Mastery - +5 max Pl spend for T2 and T3
+    precisionMastery: {
+      baseCost: 10,
+      costScale: 10,
+      effectPerLevel: 5,  // +5 max Pl per level
+    },
+  },
+
+  // ===== COLLIDER CHANNELS =====
+  colliderChannels: {
+    // T2 channels: cost 10 input particles
+    t2: {
+      particleCost: 10,
+      channels: {
+        u_to_s: { input: 'u', output: 's', label: 'u→s' },
+        u_to_c: { input: 'u', output: 'c', label: 'u→c' },
+        d_to_s: { input: 'd', output: 's', label: 'd→s' },
+        d_to_c: { input: 'd', output: 'c', label: 'd→c' },
+        e_to_mu: { input: 'e-', output: 'mu-', label: 'e⁻→μ⁻' },
+        ve_to_vmu: { input: 've', output: 'vmu', label: 'νe→νμ' },
+      },
+      // T2 fail: base energy that scales exponentially with Pl
+      failEnergyBase: 0.5,
+      failEnergyExponent: 1.2,  // energy = base * (exponent ^ plSpent)
+    },
+    // T3 channels: cost 10 input T2 particles + energy, fail returns 100 T1 particles
+    t3: {
+      particleCost: 10,
+      energyCost: 5,
+      failT1Return: 100,
+      channels: {
+        s_to_b: { input: 's', output: 'b', t1Source: 'u', label: 's→b' },
+        s_to_t: { input: 's', output: 't', t1Source: 'u', label: 's→t' },
+        c_to_b: { input: 'c', output: 'b', t1Source: 'u', label: 'c→b' },
+        c_to_t: { input: 'c', output: 't', t1Source: 'u', label: 'c→t' },
+        mu_to_tau: { input: 'mu-', output: 'tau-', t1Source: 'e-', label: 'μ⁻→τ⁻' },
+        vmu_to_vtau: { input: 'vmu', output: 'vtau', t1Source: 've', label: 'νμ→ντ' },
+      },
+    },
   },
 };
 

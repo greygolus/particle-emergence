@@ -161,7 +161,7 @@ function createSidebar(container: HTMLElement, state: GameState): void {
     { id: 'stats', name: 'Stats', unlocked: true },
   ];
 
-  const html = tabs
+  const tabsHtml = tabs
     .filter(t => t.unlocked)
     .map(t => `
       <button
@@ -174,7 +174,35 @@ function createSidebar(container: HTMLElement, state: GameState): void {
     `)
     .join('');
 
-  container.innerHTML = html;
+  const devToolsHtml = `
+    <div class="dev-tools">
+      <div class="dev-tools-header" data-action="toggle-dev-tools">
+        <span>Dev Tools</span>
+        <span class="dev-tools-arrow" data-bind="dev-tools-arrow">▼</span>
+      </div>
+      <div class="dev-tools-content" data-bind="dev-tools-content">
+        <div class="dev-tools-section">
+          <span class="dev-label">Set Level:</span>
+          <div class="dev-buttons">
+            <button class="btn btn-tiny" data-action="dev-set-e1">E1</button>
+            <button class="btn btn-tiny" data-action="dev-set-e2">E2</button>
+            <button class="btn btn-tiny" data-action="dev-set-e3">E3</button>
+            <button class="btn btn-tiny" data-action="dev-set-e4">E4</button>
+            <button class="btn btn-tiny" data-action="dev-set-e5">E5</button>
+            <button class="btn btn-tiny" data-action="dev-set-e6">E6</button>
+          </div>
+        </div>
+        <div class="dev-tools-section">
+          <button class="btn btn-small" data-action="dev-add-atoms">+250 Atoms</button>
+        </div>
+        <div class="dev-tools-section">
+          <button class="btn btn-small dev-btn-gold" data-action="dev-everything-x10">(+1) ×10</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = tabsHtml + devToolsHtml;
 }
 
 function updateSidebar(container: HTMLElement, state: GameState): void {

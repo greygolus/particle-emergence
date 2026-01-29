@@ -35,7 +35,7 @@ function createAssemblyTab(container: HTMLElement, state: GameState): void {
   let html = `
     <div class="tab-content assembly-tab">
       <section class="card">
-        <h2>Assembly Statistics</h2>
+        <h2>Assembly Statistics <span class="info-btn" data-tooltip-info="assembly">i</span></h2>
         <div class="assembly-stats">
           <div class="stat">
             <span class="label">Stability:</span>
@@ -111,7 +111,7 @@ function createAssemblyTab(container: HTMLElement, state: GameState): void {
 
       ${state.currentEmergentLevel >= 6 ? `
         <section class="card">
-          <h2>Atom Builder</h2>
+          <h2>Atom Builder <span class="info-btn" data-tooltip-info="atomBuilder">i</span></h2>
           <div class="atom-builder">
             <div class="recipe">
               <span>1 Proton + 1 Neutron + <span data-bind="atom-electron-cost"></span> Electrons</span>

@@ -46,6 +46,27 @@ export type ColliderMode = 'quark' | 'lepton';
 export type ColliderTier = 2 | 3;
 export type ColliderMatterMode = 'matter' | 'antimatter';
 
+// Collider channels - defines input -> output particle paths
+export type ColliderChannelT2 =
+  | 'u_to_s' | 'u_to_c'    // u quark -> strange or charm
+  | 'd_to_s' | 'd_to_c'    // d quark -> strange or charm
+  | 'e_to_mu' | 've_to_vmu';  // electrons/neutrinos -> muons
+
+export type ColliderChannelT3 =
+  | 's_to_b' | 's_to_t'    // strange -> bottom or top
+  | 'c_to_b' | 'c_to_t'    // charm -> bottom or top
+  | 'mu_to_tau' | 'vmu_to_vtau';  // muons -> taus
+
+export type ColliderChannel = ColliderChannelT2 | ColliderChannelT3;
+
+// Debris shop upgrades
+export interface DebrisShopUpgrades {
+  energyAmplifier: number;    // Boosts exponential scaling of Pl->Energy on fail
+  debrisSynergy: number;      // +X% Pq/s based on debris held
+  leptonBoost: number;        // +5% lepton rate AND Pl factor per level
+  precisionMastery: number;   // +5 max Pl spend per level
+}
+
 // Harvester polarity
 export type HarvesterPolarity = 'matter' | 'antimatter';
 
@@ -182,6 +203,7 @@ export interface ColliderState {
   tier: ColliderTier;
   mode: ColliderMode;
   matterMode: ColliderMatterMode;
+  channel: ColliderChannel;  // The specific particle transformation path
   precisionSpend: number;
   pity: number;
   slottedPhotons: number;
@@ -282,6 +304,9 @@ export interface GameState {
 
   // Forces tab unlocked
   forcesUnlocked: boolean;
+
+  // Debris shop upgrades (persist across emerges)
+  debrisUpgrades: DebrisShopUpgrades;
 
   // Temp buffs (reset on emerge)
   tempBuffs: TempBuffs;

@@ -5,6 +5,12 @@
 import { GameState, ColliderRunResult, ExoticEventResult, ColliderMode, ColliderTier, BosonParticle } from '../types';
 import { BALANCE } from '../config/balance';
 import { getPrecisionBonus } from '../core/state';
+import { getExtraPrecisionCap, getEnergyAmplifierBonus } from './debris';
+
+export function getMaxPrecision(state: GameState, tier: ColliderTier): number {
+  const base = tier === 2 ? BALANCE.colliderT2.maxPrecisionSpend : BALANCE.colliderT3.maxPrecisionSpend;
+  return base + getExtraPrecisionCap(state);
+}
 
 export function canRunCollider(state: GameState, tier: ColliderTier): { canRun: boolean; reason?: string } {
   if (tier === 2) {
@@ -203,6 +209,16 @@ export function runCollider(state: GameState): { newState: GameState; result: Co
       }
     }
 
+    // T2 failures give energy based on Pl spent (exponential scaling)
+    if (tier === 2 && precisionSpend > 0) {
+      const baseEnergy = BALANCE.colliderChannels.t2.failEnergyBase;
+      const exponent = BALANCE.colliderChannels.t2.failEnergyExponent + getEnergyAmplifierBonus(state);
+      const failEnergy = baseEnergy * Math.pow(precisionSpend, exponent);
+      result.energyGained += failEnergy;
+      newState.energy += failEnergy;
+      newState.stats.totalEnergyProduced += failEnergy;
+    }
+
     // Add pity
     if (!pityTriggered) {
       newState.collider.pity += 1;
@@ -366,9 +382,13 @@ export function unlockTier3(state: GameState): GameState {
 }
 
 export function setColliderTier(state: GameState, tier: ColliderTier): GameState {
+  // Clamp precision spend to new tier's max (including debris upgrade bonus)
+  const maxPrecision = getMaxPrecision(state, tier);
+  const clampedPrecision = Math.min(state.collider.precisionSpend, maxPrecision);
+
   return {
     ...state,
-    collider: { ...state.collider, tier },
+    collider: { ...state.collider, tier, precisionSpend: clampedPrecision },
   };
 }
 
@@ -387,9 +407,7 @@ export function setColliderMatterMode(state: GameState, matterMode: 'matter' | '
 }
 
 export function setPrecisionSpend(state: GameState, amount: number): GameState {
-  const max = state.collider.tier === 2
-    ? BALANCE.colliderT2.maxPrecisionSpend
-    : BALANCE.colliderT3.maxPrecisionSpend;
+  const max = getMaxPrecision(state, state.collider.tier);
   return {
     ...state,
     collider: { ...state.collider, precisionSpend: Math.min(Math.max(0, amount), max) },

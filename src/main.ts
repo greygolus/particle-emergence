@@ -6,6 +6,7 @@ import { createInitialState, loadGame, applyOfflineProgress, saveGame } from './
 import { createGameLoop } from './core/gameLoop';
 import { render, setGameLoop } from './ui/renderer';
 import { initEventDelegation } from './ui/eventDelegation';
+import { initTooltipSystem } from './ui/tooltipManager';
 import { formatTime } from './utils/format';
 
 // Initialize the game
@@ -44,6 +45,9 @@ function init(): void {
 
   // Initialize event delegation (attaches event listeners once)
   initEventDelegation();
+
+  // Initialize tooltip system
+  initTooltipSystem(() => gameLoop.getState());
 
   // Start the loop
   gameLoop.start();

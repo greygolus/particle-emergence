@@ -32,7 +32,7 @@ function createForcesTab(container: HTMLElement, state: GameState): void {
   let html = `
     <div class="tab-content forces-tab">
       <section class="card">
-        <h2>Fundamental Forces</h2>
+        <h2>Fundamental Forces <span class="info-btn" data-tooltip-info="forces">i</span></h2>
         <p class="hint">Bosons are the carriers of fundamental forces. Collect them to enhance your capabilities.</p>
 
         <div class="boson-inventory-large">

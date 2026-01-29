@@ -6,6 +6,7 @@ import { GameState, Element, EmergentLevel } from '../types';
 import type { TabId, BuyMode } from '../types';
 import { BALANCE } from '../config/balance';
 import { ELEMENTS } from '../config/elements';
+import { getLeptonBoostMultiplier, getDebrisSynergyBonus, getExtraPrecisionCap } from '../systems/debris';
 
 const SAVE_KEY = 'particle_emergence_save';
 const CURRENT_VERSION = 1;
@@ -80,6 +81,7 @@ export function createInitialState(): GameState {
       tier: 2,
       mode: 'quark',
       matterMode: 'matter',
+      channel: 'u_to_s',  // Default channel
       precisionSpend: 0,
       pity: 0,
       slottedPhotons: 0,
@@ -109,6 +111,14 @@ export function createInitialState(): GameState {
     activeDecay: null,
 
     forcesUnlocked: false,
+
+    // Debris shop upgrades (persist)
+    debrisUpgrades: {
+      energyAmplifier: 0,
+      debrisSynergy: 0,
+      leptonBoost: 0,
+      precisionMastery: 0,
+    },
 
     // Temp buffs
     tempBuffs: {
@@ -254,6 +264,7 @@ export function resetForEmerge(state: GameState, newLevel: EmergentLevel): GameS
     tier: 2,
     mode: 'quark',
     matterMode: 'matter',
+    channel: 'u_to_s',
     precisionSpend: 0,
     pity: 0,
     slottedPhotons: 0,
@@ -380,19 +391,24 @@ export function getPqFactor(state: GameState): number {
   if (state.pl >= 10000) crossBonus += 0.05;
   crossBonus = Math.min(crossBonus, 1 + BALANCE.crossSynergyCap);
 
-  return base * bonus * crossBonus;
+  // Debris synergy bonus (+X% Pq/s based on debris held)
+  const debrisSynergy = 1 + getDebrisSynergyBonus(state);
+
+  return base * bonus * crossBonus * debrisSynergy;
 }
 
 export function getLeptonERate(state: GameState): number {
   const base = BALANCE.leptonHarvester.baseERate;
   const bonus = 1 + state.leptonUpgrades.leptonRate * BALANCE.leptonHarvester.leptonRateBonus;
-  return base * bonus;
+  const debrisBoost = getLeptonBoostMultiplier(state);
+  return base * bonus * debrisBoost;
 }
 
 export function getLeptonNuRate(state: GameState): number {
   const base = BALANCE.leptonHarvester.baseNuERate;
   const bonus = 1 + state.leptonUpgrades.leptonRate * BALANCE.leptonHarvester.leptonRateBonus;
-  return base * bonus;
+  const debrisBoost = getLeptonBoostMultiplier(state);
+  return base * bonus * debrisBoost;
 }
 
 export function getPlFactor(state: GameState): number {
@@ -406,7 +422,10 @@ export function getPlFactor(state: GameState): number {
   if (state.pq >= 100000) crossBonus += 0.05;
   crossBonus = Math.min(crossBonus, 1 + BALANCE.crossSynergyCap);
 
-  return base * crossBonus;
+  // Debris shop lepton boost also boosts Pl factor
+  const debrisBoost = getLeptonBoostMultiplier(state);
+
+  return base * crossBonus * debrisBoost;
 }
 
 export function getPrecisionBonus(state: GameState): number {
